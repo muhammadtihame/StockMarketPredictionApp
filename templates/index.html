@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Predictor AI | Multi-Stock Analysis</title>
+    <meta name="description"
+        content="Predict stock prices using advanced machine learning. Get AI-powered insights for tomorrow's stock prices.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">📈</div>
+                <div class="logo-text">
+                    <h1>StockPredict AI</h1>
+                    <span>Multi-Stock Analysis • Powered by LightGBM</span>
+                </div>
+            </div>
+            <div class="status-badge" id="status-badge">
+                <span class="status-dot"></span>
+                <span>Live Data</span>
+            </div>
+        </header>
+
+        <!-- Stock Ticker Bar -->
+        <div class="ticker-bar glass-card" id="ticker-bar">
+            <div class="ticker-loading">Loading stock prices...</div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Stock Selection -->
+            <div class="stock-selector glass-card">
+                <h3>🔍 Select a Stock</h3>
+                <div class="stock-grid" id="stock-grid">
+                    <!-- Stocks will be populated here -->
+                </div>
+                <div class="custom-stock">
+                    <input type="text" id="custom-symbol" placeholder="Enter any symbol (e.g., NFLX)" maxlength="10">
+                    <button onclick="predictCustomStock()" class="custom-btn">Analyze</button>
+                </div>
+            </div>
+
+            <!-- Selected Stock Card -->
+            <div class="selected-stock-card glass-card" id="selected-stock-card">
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <div class="stock-logo" id="stock-logo">
+                            <span class="stock-icon">📊</span>
+                        </div>
+                        <div class="stock-details">
+                            <h2 class="company-name" id="company-name">Select a Stock</h2>
+                            <span class="ticker" id="ticker-symbol">Choose from the list above</span>
+                        </div>
+                    </div>
+                    <div class="current-price-container">
+                        <span class="label">Current Price</span>
+                        <div class="current-price" id="current-price">$---</div>
+                        <div class="last-updated" id="last-updated">--</div>
+                    </div>
+                </div>
+
+                <div class="stock-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">6M High</span>
+                        <span class="stat-value" id="high-52w">$---</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">6M Low</span>
+                        <span class="stat-value" id="low-52w">$---</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Volume</span>
+                        <span class="stat-value" id="volume">---</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">RSI</span>
+                        <span class="stat-value" id="rsi-stat">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Card -->
+            <div class="prediction-card glass-card">
+                <div class="prediction-header">
+                    <h3>🤖 AI Prediction</h3>
+                    <span class="prediction-date" id="prediction-date">Tomorrow's Price</span>
+                </div>
+
+                <div class="prediction-content" id="prediction-content">
+                    <div class="prediction-placeholder">
+                        <div class="placeholder-icon">🎯</div>
+                        <p>Select a stock and click predict to get tomorrow's price</p>
+                    </div>
+                </div>
+
+                <div class="prediction-result hidden" id="prediction-result">
+                    <div class="predicted-price-container">
+                        <span class="label">Predicted Price</span>
+                        <div class="predicted-price" id="predicted-price">$---</div>
+                    </div>
+                    <div class="price-change-container" id="price-change-container">
+                        <div class="change-arrow" id="change-arrow">↑</div>
+                        <div class="change-details">
+                            <span class="change-value" id="change-value">+$0.00</span>
+                            <span class="change-percent" id="change-percent">(+0.00%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="predict-btn" id="predict-btn" onclick="getPrediction()" disabled>
+                    <span class="btn-icon">✨</span>
+                    <span class="btn-text">Select a Stock First</span>
+                    <span class="btn-loader hidden" id="btn-loader"></span>
+                </button>
+            </div>
+
+            <!-- Technical Indicators -->
+            <div class="indicators-card glass-card">
+                <h3>📊 Technical Indicators</h3>
+                <div class="indicators-grid" id="indicators-grid">
+                    <div class="indicator-item">
+                        <span class="indicator-label">RSI (14)</span>
+                        <span class="indicator-value" id="rsi">--</span>
+                        <div class="indicator-bar">
+                            <div class="indicator-fill rsi-fill" id="rsi-bar"></div>
+                        </div>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">MACD</span>
+                        <span class="indicator-value" id="macd">--</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">MA 7</span>
+                        <span class="indicator-value" id="ma7">$--</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">MA 21</span>
+                        <span class="indicator-value" id="ma21">$--</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">MA 50</span>
+                        <span class="indicator-value" id="ma50">$--</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">Volatility</span>
+                        <span class="indicator-value" id="volatility">--%</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-label">ATR (14)</span>
+                        <span class="indicator-value" id="atr">$--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Info -->
+            <div class="model-info glass-card">
+                <h3>🧠 Model Information</h3>
+                <div class="model-details">
+                    <div class="model-item">
+                        <span class="model-label">Algorithm</span>
+                        <span class="model-value">LightGBM Regressor</span>
+                    </div>
+                    <div class="model-item">
+                        <span class="model-label">Features</span>
+                        <span class="model-value">16 Technical Indicators</span>
+                    </div>
+                    <div class="model-item">
+                        <span class="model-label">Data Source</span>
+                        <span class="model-value">Yahoo Finance (Real-time)</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>⚠️ <strong>Disclaimer:</strong> This is for educational purposes only. Not financial advice.</p>
+            <p class="copyright">Built with Flask, LightGBM & ❤️</p>
+        </footer>
+    </div>
+
+    <script>
+        let selectedStock = null;
+
+        // Format large numbers
+        function formatNumber(num) {
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return num.toLocaleString();
+        }
+
+        // Load all stocks
+        async function loadStocks() {
+            try {
+                const response = await fetch('/api/stocks');
+                const result = await response.json();
+
+                if (result.success) {
+                    renderStockGrid(result.stocks);
+                    renderTickerBar(result.stocks);
+                }
+            } catch (error) {
+                console.error('Error loading stocks:', error);
+            }
+        }
+
+        // Render stock grid
+        function renderStockGrid(stocks) {
+            const grid = document.getElementById('stock-grid');
+            grid.innerHTML = stocks.map(stock => `
+                <div class="stock-item ${stock.error ? 'error' : ''}" 
+                     onclick="selectStock('${stock.symbol}', '${stock.name}', ${stock.price})">
+                    <div class="stock-item-header">
+                        <span class="stock-symbol">${stock.symbol}</span>
+                        <span class="stock-change ${stock.change >= 0 ? 'positive' : 'negative'}">
+                            ${stock.change >= 0 ? '+' : ''}${stock.change_pct.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div class="stock-item-name">${stock.name}</div>
+                    <div class="stock-item-price">$${stock.price.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Render ticker bar
+        function renderTickerBar(stocks) {
+            const ticker = document.getElementById('ticker-bar');
+            ticker.innerHTML = stocks.map(stock => `
+                <div class="ticker-item">
+                    <span class="ticker-symbol">${stock.symbol}</span>
+                    <span class="ticker-price">$${stock.price.toFixed(2)}</span>
+                    <span class="ticker-change ${stock.change >= 0 ? 'positive' : 'negative'}">
+                        ${stock.change >= 0 ? '▲' : '▼'} ${Math.abs(stock.change_pct).toFixed(2)}%
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Select a stock
+        function selectStock(symbol, name, price) {
+            selectedStock = symbol;
+
+            // Update UI
+            document.getElementById('company-name').textContent = name;
+            document.getElementById('ticker-symbol').textContent = symbol;
+            document.getElementById('current-price').textContent = '$' + price.toFixed(2);
+
+            // Enable predict button
+            const btn = document.getElementById('predict-btn');
+            btn.disabled = false;
+            btn.querySelector('.btn-text').textContent = `Predict ${symbol} Tomorrow's Price`;
+
+            // Highlight selected stock
+            document.querySelectorAll('.stock-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            // Reset prediction
+            document.getElementById('prediction-content').classList.remove('hidden');
+            document.getElementById('prediction-result').classList.add('hidden');
+        }
+
+        // Predict custom stock
+        function predictCustomStock() {
+            const input = document.getElementById('custom-symbol');
+            const symbol = input.value.trim().toUpperCase();
+            if (symbol) {
+                selectedStock = symbol;
+                document.getElementById('company-name').textContent = symbol;
+                document.getElementById('ticker-symbol').textContent = symbol;
+
+                const btn = document.getElementById('predict-btn');
+                btn.disabled = false;
+                btn.querySelector('.btn-text').textContent = `Predict ${symbol} Tomorrow's Price`;
+
+                getPrediction();
+            }
+        }
+
+        // Get prediction from API
+        async function getPrediction() {
+            if (!selectedStock) {
+                alert('Please select a stock first');
+                return;
+            }
+
+            const btn = document.getElementById('predict-btn');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            const predictionContent = document.getElementById('prediction-content');
+            const predictionResult = document.getElementById('prediction-result');
+
+            // Show loading state
+            btn.disabled = true;
+            btnText.textContent = 'Analyzing ' + selectedStock + '...';
+            btnLoader.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/predict/' + selectedStock);
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+
+                    // Update stock info
+                    document.getElementById('company-name').textContent = data.company_name;
+                    document.getElementById('ticker-symbol').textContent = data.symbol;
+                    document.getElementById('current-price').textContent = '$' + data.current_price.toFixed(2);
+                    document.getElementById('last-updated').textContent = 'Updated: ' + data.last_updated;
+                    document.getElementById('high-52w').textContent = '$' + data.high_52w.toFixed(2);
+                    document.getElementById('low-52w').textContent = '$' + data.low_52w.toFixed(2);
+                    document.getElementById('volume').textContent = formatNumber(data.volume);
+                    document.getElementById('rsi-stat').textContent = data.indicators.rsi_14;
+
+                    // Update prediction
+                    document.getElementById('prediction-date').textContent = 'Prediction for ' + data.prediction_date;
+                    document.getElementById('predicted-price').textContent = '$' + data.predicted_price.toFixed(2);
+
+                    const changeContainer = document.getElementById('price-change-container');
+                    const changeArrow = document.getElementById('change-arrow');
+                    const changeValue = document.getElementById('change-value');
+                    const changePercent = document.getElementById('change-percent');
+
+                    if (data.price_change >= 0) {
+                        changeContainer.classList.remove('negative');
+                        changeContainer.classList.add('positive');
+                        changeArrow.textContent = '↑';
+                        changeValue.textContent = '+$' + data.price_change.toFixed(2);
+                        changePercent.textContent = '(+' + data.price_change_pct.toFixed(2) + '%)';
+                    } else {
+                        changeContainer.classList.remove('positive');
+                        changeContainer.classList.add('negative');
+                        changeArrow.textContent = '↓';
+                        changeValue.textContent = '-$' + Math.abs(data.price_change).toFixed(2);
+                        changePercent.textContent = '(' + data.price_change_pct.toFixed(2) + '%)';
+                    }
+
+                    // Update technical indicators
+                    const indicators = data.indicators;
+                    document.getElementById('rsi').textContent = indicators.rsi_14;
+                    document.getElementById('macd').textContent = indicators.macd.toFixed(4);
+                    document.getElementById('ma7').textContent = '$' + indicators.ma7.toFixed(2);
+                    document.getElementById('ma21').textContent = '$' + indicators.ma21.toFixed(2);
+                    document.getElementById('ma50').textContent = '$' + indicators.ma50.toFixed(2);
+                    document.getElementById('volatility').textContent = indicators.volatility.toFixed(2) + '%';
+                    document.getElementById('atr').textContent = '$' + indicators.atr.toFixed(2);
+
+                    // Update RSI bar
+                    const rsiBar = document.getElementById('rsi-bar');
+                    rsiBar.style.width = indicators.rsi_14 + '%';
+                    rsiBar.classList.remove('overbought', 'oversold');
+                    if (indicators.rsi_14 > 70) {
+                        rsiBar.classList.add('overbought');
+                    } else if (indicators.rsi_14 < 30) {
+                        rsiBar.classList.add('oversold');
+                    }
+
+                    // Show prediction result
+                    predictionContent.classList.add('hidden');
+                    predictionResult.classList.remove('hidden');
+                    predictionResult.classList.add('animate-in');
+
+                } else {
+                    alert('Error: ' + result.error);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to get prediction. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = `Predict ${selectedStock} Tomorrow's Price`;
+                btnLoader.classList.add('hidden');
+            }
+        }
+
+        // Allow enter key for custom stock input
+        document.getElementById('custom-symbol').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                predictCustomStock();
+            }
+        });
+
+        // Initial load
+        window.onload = function () {
+            loadStocks();
+
+            // Update status badge
+            fetch('/api/health')
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('status-badge');
+                    if (data.model_loaded && data.scaler_loaded) {
+                        badge.classList.add('ready');
+                    } else {
+                        badge.classList.add('error');
+                        badge.querySelector('span:last-child').textContent = 'Model Error';
+                    }
+                });
+
+            // Refresh stock prices every 60 seconds
+            setInterval(loadStocks, 60000);
+        };
+    </script>
+</body>
+
+</html>
